@@ -54,7 +54,7 @@
 
             try {
                 // Загружаем статью
-                const artRes = await fetch(`http://127.0.0.1:5000/get-article/${articleId}`);
+                const artRes = await fetch(`https://eightvnews.onrender.com/get-article/${articleId}`);
                 const art = await artRes.json();
                 
                 document.getElementById('art-title').innerText = art.title;
@@ -70,7 +70,7 @@
         }
 
         async function loadComments() {
-            const res = await fetch(`http://127.0.0.1:5000/get-comments/${articleId}`);
+            const res = await fetch(`https://eightvnews.onrender.com/get-comments/${articleId}`);
             const comments = await res.json();
             const list = document.getElementById('comments-list');
             list.innerHTML = '';
@@ -87,7 +87,7 @@
             if (!user) { alert("Войдите!"); return; }
             if (!text) return;
 
-            await fetch('http://127.0.0.1:5000/add-comment', {
+            await fetch('https://eightvnews.onrender.com/add-comment', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ article_id: articleId, author: user, text: text })

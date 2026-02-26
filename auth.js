@@ -35,7 +35,7 @@ async function handleAuth() {
 
     // Определяем, на какой адрес отправлять данные (на наш Flask сервер)
     const endpoint = isLoginMode ? '/login' : '/register';
-    const url = 'http://127.0.0.1:5000' + endpoint;
+    const url = 'https://eightvnews.onrender.com' + endpoint;
 
     try {
         // Отправляем запрос на сервер

@@ -36,7 +36,7 @@
 
             // Загрузка статей
             try {
-                const res = await fetch('http://127.0.0.1:5000/get-articles');
+                const res = await fetch('https://eightvnews.onrender.com/get-articles');
                 const articles = await res.json();
                 const container = document.getElementById('news-container');
                 
