@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чтение статьи — Daily News</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="index.html" style="color: white; text-decoration: none;"><h1>Daily News</h1></a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="profile.html">Профиль</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
+        <article>
+            <span id="art-category" style="color: #3498db; font-weight: bold;"></span>
+            <h1 id="art-title" style="font-size: 32px; margin: 10px 0;">Загрузка...</h1>
+            <p id="art-author" style="color: #888; font-style: italic;"></p>
+            <div id="art-content" style="font-size: 18px; line-height: 1.6; margin-top: 20px; white-space: pre-wrap;">
+                Загрузка текста статьи...
+            </div>
+        </article>
+
+        <hr style="margin: 40px 0;">
+
+        <section class="comments">
+            <h3>Комментарии</h3>
+            <div id="comment-form" style="margin-bottom: 20px;">
+                <textarea id="comment-text" placeholder="Ваш комментарий..." style="width: 100%; height: 80px; padding: 10px;"></textarea>
+                <button onclick="sendComment()" style="margin-top: 10px; background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer;">Отправить</button>
+            </div>
+            <div id="comments-list"></div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Получаем ID статьи из ссылки
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        async function loadPage() {
+            if (!articleId) {
+                document.body.innerHTML = "<h1>Статья не выбрана</h1>";
+                return;
+            }
+
+            try {
+                // Загружаем статью
+                const artRes = await fetch(`http://127.0.0.1:5000/get-article/${articleId}`);
+                const art = await artRes.json();
+                
+                document.getElementById('art-title').innerText = art.title;
+                document.getElementById('art-category').innerText = art.category;
+                document.getElementById('art-author').innerText = "Автор: " + art.author;
+                document.getElementById('art-content').innerText = art.content;
+
+                // Загружаем комментарии
+                loadComments();
+            } catch (e) {
+                alert("Ошибка при загрузке данных");
+            }
+        }
+
+        async function loadComments() {
+            const res = await fetch(`http://127.0.0.1:5000/get-comments/${articleId}`);
+            const comments = await res.json();
+            const list = document.getElementById('comments-list');
+            list.innerHTML = '';
+            comments.forEach(c => {
+                list.innerHTML += `<div style="background:#f4f4f4; padding:10px; margin-bottom:10px; border-radius:5px;">
+                    <strong>👤 ${c.author}</strong><p>${c.text}</p>
+                </div>`;
+            });
+        }
+
+        async function sendComment() {
+            const user = localStorage.getItem('currentUser');
+            const text = document.getElementById('comment-text').value;
+            if (!user) { alert("Войдите!"); return; }
+            if (!text) return;
+
+            await fetch('http://127.0.0.1:5000/add-comment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ article_id: articleId, author: user, text: text })
+            });
+            document.getElementById('comment-text').value = '';
+            loadComments();
+        }
+
+        window.onload = loadPage;
+    </script>
+</body>
+</html>
+

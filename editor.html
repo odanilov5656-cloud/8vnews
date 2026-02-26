@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Написать статью — Daily News</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="index.html" style="color:white; text-decoration:none;"><h1>Daily News</h1></a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">На главную</a></li>
+                    <li><a href="profile.html">В профиль</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="editor-container" style="background: white; padding: 30px; border-radius: 10px; margin-top: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <h2>Создание новой статьи</h2>
+            
+            <label>Заголовок:</label>
+            <input type="text" id="post-title" placeholder="Введите броский заголовок" style="width: 100%; padding: 10px; margin: 10px 0;">
+
+            <label>Категория:</label>
+            <select id="post-category" style="width: 100%; padding: 10px; margin: 10px 0;">
+                <option value="Технологии">Технологии</option>
+                <option value="Спорт">Спорт</option>
+                <option value="Жизнь">Жизнь</option>
+            </select>
+
+            <label>Текст статьи:</label>
+            <textarea id="post-content" placeholder="О чем хотите рассказать?" style="width: 100%; height: 250px; padding: 10px; margin: 10px 0; font-family: sans-serif;"></textarea>
+
+            <button onclick="publishPost()" id="publish-btn" style="background: #27ae60; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Опубликовать</button>
+        </div>
+    </main>
+
+    <script>
+        async function publishPost() {
+            const btn = document.getElementById('publish-btn');
+            const author = localStorage.getItem('currentUser');
+
+            // 1. Проверка авторизации
+            if (!author) {
+                alert("Ошибка: Вы не вошли в систему!");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 2. Сбор данных
+            const title = document.getElementById('post-title').value.trim();
+            const category = document.getElementById('post-category').value;
+            const content = document.getElementById('post-content').value.trim();
+
+            if (!title || !content) {
+                alert("Заполните заголовок и текст статьи!");
+                return;
+            }
+
+            // Блокируем кнопку, чтобы не нажали дважды
+            btn.innerText = "Публикация...";
+            btn.disabled = true;
+
+            const postData = {
+                title: title,
+                category: category,
+                content: content,
+                author: author
+            };
+
+            console.log("Отправляем данные:", postData);
+
+            try {
+                // 3. Отправка на сервер
+                const response = await fetch('http://127.0.0.1:5000/create-article', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(postData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Ура! " + result.message);
+                    window.location.href = 'index.html'; // Уходим на главную
+                } else {
+                    alert("Ошибка сервера: " + result.message);
+                }
+            } catch (error) {
+                console.error("Ошибка сети:", error);
+                alert("Не удалось связаться с сервером. Убедитесь, что Python (app.py) запущен!");
+            } finally {
+                btn.innerText = "Опубликовать";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+
