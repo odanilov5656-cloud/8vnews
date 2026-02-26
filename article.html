@@ -6,98 +6,61 @@
     <title>Чтение статьи — Daily News</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <header>
-        <div class="container">
-            <a href="index.html" style="color: white; text-decoration: none;"><h1>Daily News</h1></a>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Главная</a></li>
-                    <li><a href="profile.html">Профиль</a></li>
-                </ul>
-            </nav>
+<body style="background: #f4f4f4; font-family: sans-serif; margin: 0;">
+    <header style="background: #222; color: white; padding: 15px;">
+        <div class="container" style="max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between;">
+            <a href="index.html" style="color: white; text-decoration: none;">← На главную</a>
+            <span id="user-info"></span>
         </div>
     </header>
 
-    <main class="container" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
-        <article>
-            <span id="art-category" style="color: #3498db; font-weight: bold;"></span>
-            <h1 id="art-title" style="font-size: 32px; margin: 10px 0;">Загрузка...</h1>
-            <p id="art-author" style="color: #888; font-style: italic;"></p>
-            <div id="art-content" style="font-size: 18px; line-height: 1.6; margin-top: 20px; white-space: pre-wrap;">
-                Загрузка текста статьи...
+    <main class="container" style="max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div id="article-content">
+            <h1 id="title">Загрузка заголовка...</h1>
+            <p style="color: #3498db; font-weight: bold;" id="meta"></p>
+            <hr>
+            <div id="body" style="line-height: 1.6; font-size: 18px; white-space: pre-wrap;">
+                Подождите, сервер Render просыпается...
             </div>
-        </article>
-
-        <hr style="margin: 40px 0;">
-
-        <section class="comments">
-            <h3>Комментарии</h3>
-            <div id="comment-form" style="margin-bottom: 20px;">
-                <textarea id="comment-text" placeholder="Ваш комментарий..." style="width: 100%; height: 80px; padding: 10px;"></textarea>
-                <button onclick="sendComment()" style="margin-top: 10px; background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer;">Отправить</button>
-            </div>
-            <div id="comments-list"></div>
-        </section>
+        </div>
     </main>
 
     <script>
-        // 1. Получаем ID статьи из ссылки
+        const API = 'https://eightvnews.onrender.com';
+        
+        // Получаем ID статьи из ссылки (например, article.html?id=1)
         const urlParams = new URLSearchParams(window.location.search);
         const articleId = urlParams.get('id');
 
-        async function loadPage() {
+        async function loadArticle() {
             if (!articleId) {
-                document.body.innerHTML = "<h1>Статья не выбрана</h1>";
+                document.getElementById('body').innerText = "Статья не найдена (не указан ID).";
                 return;
             }
 
             try {
-                // Загружаем статью
-                const artRes = await fetch(`https://eightvnews.onrender.com/get-article/${articleId}`);
-                const art = await artRes.json();
+                // Запрашиваем конкретную статью у твоего сервера
+                const res = await fetch(`${API}/get-articles`);
+                const articles = await res.json();
                 
-                document.getElementById('art-title').innerText = art.title;
-                document.getElementById('art-category').innerText = art.category;
-                document.getElementById('art-author').innerText = "Автор: " + art.author;
-                document.getElementById('art-content').innerText = art.content;
+                // Ищем нужную статью в списке по ID
+                const article = articles.find(a => a.id == articleId);
 
-                // Загружаем комментарии
-                loadComments();
+                if (article) {
+                    document.getElementById('title').innerText = article.title;
+                    document.getElementById('meta').innerText = `Категория: ${article.category} | Автор: ${article.author}`;
+                    document.getElementById('body').innerText = article.content || "У этой статьи пока нет текста.";
+                } else {
+                    document.getElementById('body').innerText = "Извините, такая статья не существует или была удалена.";
+                }
             } catch (e) {
-                alert("Ошибка при загрузке данных");
+                console.error(e);
+                alert("Ошибка при связи с сервером. Попробуйте обновить страницу через 20 секунд.");
+                document.getElementById('body').innerHTML = "<b style='color:red;'>Сервер временно недоступен.</b>";
             }
         }
 
-        async function loadComments() {
-            const res = await fetch(`https://eightvnews.onrender.com/get-comments/${articleId}`);
-            const comments = await res.json();
-            const list = document.getElementById('comments-list');
-            list.innerHTML = '';
-            comments.forEach(c => {
-                list.innerHTML += `<div style="background:#f4f4f4; padding:10px; margin-bottom:10px; border-radius:5px;">
-                    <strong>👤 ${c.author}</strong><p>${c.text}</p>
-                </div>`;
-            });
-        }
-
-        async function sendComment() {
-            const user = localStorage.getItem('currentUser');
-            const text = document.getElementById('comment-text').value;
-            if (!user) { alert("Войдите!"); return; }
-            if (!text) return;
-
-            await fetch('https://eightvnews.onrender.com/add-comment', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ article_id: articleId, author: user, text: text })
-            });
-            document.getElementById('comment-text').value = '';
-            loadComments();
-        }
-
-        window.onload = loadPage;
+        window.onload = loadArticle;
     </script>
 </body>
 </html>
-
