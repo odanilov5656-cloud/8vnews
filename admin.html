@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админ-панель</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #333; color: white; }
+        .btn-del { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+        .btn-block { background: #f39c12; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    </style>
+</head>
+<body style="background: #f0f2f5;">
+    <div class="container">
+        <h1>Панель управления</h1>
+        <a href="index.html">← На главную</a>
+
+        <h3>Статьи</h3>
+        <table id="table-articles"></table>
+
+        <h3>Пользователи</h3>
+        <table id="table-users"></table>
+
+        <h3>Комментарии</h3>
+        <table id="table-comments"></table>
+    </div>
+
+    <script>
+        const API = 'https://eightvnews.onrender.com';
+
+        async function loadAdminData() {
+            const res = await fetch(`${API}/admin/data`);
+            const data = await res.json();
+
+            // Рендер статей
+            document.getElementById('table-articles').innerHTML = `
+                <tr><th>ID</th><th>Заголовок</th><th>Действие</th></tr>
+                ${data.articles.map(a => `<tr><td>${a.id}</td><td>${a.title}</td><td>
+                    <button class="btn-del" onclick="deleteItem('article', ${a.id})">Удалить</button>
+                </td></tr>`).join('')}`;
+
+            // Рендер пользователей
+            document.getElementById('table-users').innerHTML = `
+                <tr><th>ID</th><th>Имя</th><th>Статус</th><th>Действие</th></tr>
+                ${data.users.map(u => `<tr><td>${u.id}</td><td>${u.username}</td><td>${u.blocked !== 'None' ? 'Блок' : 'Ок'}</td><td>
+                    <button class="btn-block" onclick="blockUser(${u.id})">Бан 24ч</button>
+                    <button class="btn-del" onclick="deleteItem('user', ${u.id})">Удалить</button>
+                </td></tr>`).join('')}`;
+        }
+
+        async function deleteItem(target, id) {
+            if(!confirm("Удалить?")) return;
+            await fetch(`${API}/admin/delete/${target}/${id}`, { method: 'DELETE' });
+            loadAdminData();
+        }
+
+        async function blockUser(id) {
+            await fetch(`${API}/admin/block/${id}`, { method: 'POST' });
+            loadAdminData();
+        }
+
+        window.onload = loadAdminData;
+    </script>
+</body>
+</html>

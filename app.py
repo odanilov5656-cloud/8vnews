@@ -1,20 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import os
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
 
-# База данных будет создана в той же папке
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///news_portal.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# ТАБЛИЦЫ
+# --- МОДЕЛИ ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    blocked_until = db.Column(db.DateTime, nullable=True) # Время, до которого бан
 
 class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,59 +34,72 @@ class Comment(db.Model):
 
 with app.app_context():
     db.create_all()
+    # Сделаем первого юзера админом, если нужно (замени 'AdminName' на свой ник)
+    # admin = User.query.filter_by(username='AdminName').first()
+    # if admin: admin.is_admin = True; db.session.commit()
 
-# МАРШРУТЫ
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.json
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({"message": "Имя занято"}), 400
-    new_user = User(username=data['username'], password=data['password'])
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "Аккаунт создан"}), 201
+# --- API ---
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
     user = User.query.filter_by(username=data['username'], password=data['password']).first()
     if user:
-        return jsonify({"message": "Вход выполнен", "username": user.username}), 200
-    return jsonify({"message": "Ошибка входа"}), 401
-
-@app.route('/get-articles', methods=['GET'])
-def get_articles():
-    articles = Article.query.all()
-    return jsonify([{"id": a.id, "title": a.title, "category": a.category, "author": a.author} for a in articles])
-
-@app.route('/get-article/<int:art_id>', methods=['GET'])
-def get_article(art_id):
-    a = Article.query.get(art_id)
-    if a:
-        return jsonify({"id": a.id, "title": a.title, "content": a.content, "author": a.author, "category": a.category})
-    return jsonify({"message": "Статья не найдена"}), 404
+        return jsonify({
+            "username": user.username, 
+            "is_admin": user.is_admin,
+            "is_blocked": user.blocked_until > datetime.utcnow() if user.blocked_until else False
+        }), 200
+    return jsonify({"message": "Ошибка"}), 401
 
 @app.route('/create-article', methods=['POST'])
 def create_article():
     data = request.json
+    user = User.query.filter_by(username=data['author']).first()
+    if user and user.blocked_until and user.blocked_until > datetime.utcnow():
+        return jsonify({"message": "Вы заблокированы!"}), 403
     new_art = Article(title=data['title'], content=data['content'], category=data['category'], author=data['author'])
     db.session.add(new_art)
     db.session.commit()
-    return jsonify({"message": "Статья опубликована"}), 201
+    return jsonify({"message": "Опубликовано"}), 201
 
-@app.route('/add-comment', methods=['POST'])
-def add_comment():
-    data = request.json
-    new_comm = Comment(article_id=data['article_id'], author=data['author'], text=data['text'])
-    db.session.add(new_comm)
-    db.session.commit()
-    return jsonify({"message": "Комментарий добавлен"}), 201
+# --- АДМИНСКИЕ ФУНКЦИИ ---
 
-@app.route('/get-comments/<int:art_id>', methods=['GET'])
-def get_comments(art_id):
-    comments = Comment.query.filter_by(article_id=art_id).all()
-    return jsonify([{"author": c.author, "text": c.text} for c in comments])
+@app.route('/admin/data', methods=['GET'])
+def get_admin_data():
+    # В реальности тут нужна проверка токена, но для начала сделаем просто получение всех данных
+    users = User.query.all()
+    articles = Article.query.all()
+    comments = Comment.query.all()
+    return jsonify({
+        "users": [{"id": u.id, "username": u.username, "is_admin": u.is_admin, "blocked": str(u.blocked_until)} for u in users],
+        "articles": [{"id": a.id, "title": a.title, "author": a.author} for a in articles],
+        "comments": [{"id": c.id, "text": c.text, "author": c.author} for c in comments]
+    })
 
+@app.route('/admin/delete/<string:target>/<int:id>', methods=['DELETE'])
+def delete_item(target, id):
+    if target == 'article': item = Article.query.get(id)
+    elif target == 'comment': item = Comment.query.get(id)
+    elif target == 'user': item = User.query.get(id)
+    
+    if item:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({"message": "Удалено"}), 200
+    return jsonify({"message": "Не найдено"}), 404
+
+@app.route('/admin/block/<int:user_id>', methods=['POST'])
+def block_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        user.blocked_until = datetime.utcnow() + timedelta(hours=24) # Блок на сутки
+        db.session.commit()
+        return jsonify({"message": "Заблокирован на 24ч"}), 200
+    return jsonify({"message": "Ошибка"}), 404
+
+# Остальные маршруты (register, get-articles и т.д.) оставить как были раньше
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
 
