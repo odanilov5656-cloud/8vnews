@@ -2,66 +2,104 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Админ-панель</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8V News — Панель управления</title>
     <style>
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #333; color: white; }
-        .btn-del { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
-        .btn-block { background: #f39c12; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .admin-container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { margin-top: 30px; color: #34495e; font-size: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #7f8c8d; text-transform: uppercase; font-size: 12px; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-del { background: #ff7675; color: white; }
+        .btn-del:hover { background: #d63031; }
+        .btn-block { background: #fdcb6e; color: #2d3436; margin-right: 5px; }
+        .btn-block:hover { background: #e1b12c; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #3498db; text-decoration: none; }
     </style>
 </head>
-<body style="background: #f0f2f5;">
-    <div class="container">
-        <h1>Панель управления</h1>
-        <a href="index.html">← На главную</a>
+<body>
 
-        <h3>Статьи</h3>
-        <table id="table-articles"></table>
+<div class="admin-container">
+    <a href="index.html" class="back-link">← Вернуться на сайт</a>
+    <h1>Панель управления</h1>
+    <p id="status-msg" style="color: #666;">Загрузка данных с сервера...</p>
 
-        <h3>Пользователи</h3>
-        <table id="table-users"></table>
+    <h2>Статьи</h2>
+    <table id="articles-table"><thead><tr><th>ID</th><th>Заголовок</th><th>Автор</th><th>Действие</th></tr></thead><tbody></tbody></table>
 
-        <h3>Комментарии</h3>
-        <table id="table-comments"></table>
-    </div>
+    <h2>Пользователи</h2>
+    <table id="users-table"><thead><tr><th>ID</th><th>Логин</th><th>Статус</th><th>Действие</th></tr></thead><tbody></tbody></table>
 
-    <script>
-        const API = 'https://eightvnews.onrender.com';
+    <h2>Комментарии</h2>
+    <table id="comments-table"><thead><tr><th>ID</th><th>Текст</th><th>Автор</th><th>Действие</th></tr></thead><tbody></tbody></table>
+</div>
 
-        async function loadAdminData() {
+<script>
+    const API = 'https://eightvnews.onrender.com';
+
+    async function loadData() {
+        try {
             const res = await fetch(`${API}/admin/data`);
             const data = await res.json();
+            document.getElementById('status-msg').innerText = "Данные обновлены";
 
-            // Рендер статей
-            document.getElementById('table-articles').innerHTML = `
-                <tr><th>ID</th><th>Заголовок</th><th>Действие</th></tr>
-                ${data.articles.map(a => `<tr><td>${a.id}</td><td>${a.title}</td><td>
-                    <button class="btn-del" onclick="deleteItem('article', ${a.id})">Удалить</button>
-                </td></tr>`).join('')}`;
+            // Статьи
+            document.querySelector('#articles-table tbody').innerHTML = data.articles.map(a => `
+                <tr>
+                    <td>${a.id}</td>
+                    <td><b>${a.title}</b></td>
+                    <td>${a.author}</td>
+                    <td><button class="btn btn-del" onclick="deleteItem('article', ${a.id})">Удалить</button></td>
+                </tr>
+            `).join('');
 
-            // Рендер пользователей
-            document.getElementById('table-users').innerHTML = `
-                <tr><th>ID</th><th>Имя</th><th>Статус</th><th>Действие</th></tr>
-                ${data.users.map(u => `<tr><td>${u.id}</td><td>${u.username}</td><td>${u.blocked !== 'None' ? 'Блок' : 'Ок'}</td><td>
-                    <button class="btn-block" onclick="blockUser(${u.id})">Бан 24ч</button>
-                    <button class="btn-del" onclick="deleteItem('user', ${u.id})">Удалить</button>
-                </td></tr>`).join('')}`;
+            // Пользователи
+            document.querySelector('#users-table tbody').innerHTML = data.users.map(u => `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.username} ${u.is_admin ? '⭐' : ''}</td>
+                    <td>${u.blocked !== 'None' ? '<span style="color:red">BANNED</span>' : 'Active'}</td>
+                    <td>
+                        <button class="btn btn-block" onclick="blockUser(${u.id})">Бан 24ч</button>
+                        <button class="btn btn-del" onclick="deleteItem('user', ${u.id})">Удалить</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Комментарии
+            document.querySelector('#comments-table tbody').innerHTML = data.comments.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.text}</td>
+                    <td>${c.author}</td>
+                    <td><button class="btn btn-del" onclick="deleteItem('comment', ${c.id})">Удалить</button></td>
+                </tr>
+            `).join('');
+
+        } catch (e) {
+            document.getElementById('status-msg').innerHTML = "<b style='color:red'>Ошибка связи с сервером!</b>";
         }
+    }
 
-        async function deleteItem(target, id) {
-            if(!confirm("Удалить?")) return;
-            await fetch(`${API}/admin/delete/${target}/${id}`, { method: 'DELETE' });
-            loadAdminData();
+    async function deleteItem(target, id) {
+        if (!confirm("Вы уверены? Это действие нельзя отменить.")) return;
+        const res = await fetch(`${API}/admin/delete/${target}/${id}`, { method: 'DELETE' });
+        if (res.ok) loadData();
+    }
+
+    async function blockUser(id) {
+        const res = await fetch(`${API}/admin/block/${id}`, { method: 'POST' });
+        if (res.ok) {
+            alert("Пользователь заблокирован на 24 часа");
+            loadData();
         }
+    }
 
-        async function blockUser(id) {
-            await fetch(`${API}/admin/block/${id}`, { method: 'POST' });
-            loadAdminData();
-        }
+    window.onload = loadData;
+</script>
 
-        window.onload = loadAdminData;
-    </script>
 </body>
 </html>
