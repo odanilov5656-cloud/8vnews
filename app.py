@@ -6,37 +6,45 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///news.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Если меняешь структуру базы, лучше поменять имя файла на news_v3.db
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///news_v3.db'
 db = SQLAlchemy(app)
 
 class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(50))
     author = db.Column(db.String(80))
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
+    author = db.Column(db.String(50))
+    text = db.Column(db.Text, nullable=False)
 
 with app.app_context():
     db.create_all()
 
+# Старые методы...
 @app.route('/get-articles', methods=['GET'])
 def get_articles():
     articles = Article.query.all()
-    return jsonify([{"id": a.id, "title": a.title, "content": a.content, "category": a.category, "author": a.author} for a in articles])
+    return jsonify([{"id": a.id, "title": a.title, "content": a.content, "author": a.author} for a in articles])
 
-@app.route('/create-article', methods=['POST'])
-def create_article():
+# Новые методы для комментариев
+@app.route('/get-comments', methods=['GET'])
+def get_comments():
+    aid = request.args.get('article_id')
+    comments = Comment.query.filter_by(article_id=aid).all()
+    return jsonify([{"author": c.author, "text": c.text} for c in comments])
+
+@app.route('/add-comment', methods=['POST'])
+def add_comment():
     data = request.json
-    new_art = Article(
-        title=data['title'], 
-        content=data['content'], 
-        category=data['category'] or 'Без категории', 
-        author=data['author'] or 'Аноним'
-    )
-    db.session.add(new_art)
+    new_com = Comment(article_id=data['article_id'], author=data['author'] or 'Аноним', text=data['text'])
+    db.session.add(new_com)
     db.session.commit()
-    return jsonify({"message": "Успех"}), 201
+    return jsonify({"message": "OK"}), 201
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
