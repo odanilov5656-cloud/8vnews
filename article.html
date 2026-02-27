@@ -2,29 +2,42 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Статья</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чтение статьи</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+    </style>
 </head>
 <body>
-    <a href="index.html">← Назад</a>
-    <h1 id="title">Загрузка...</h1>
-    <div id="content"></div>
+    <div class="container">
+        <a href="index.html">← Назад на главную</a>
+        <h1 id="title">Загрузка...</h1>
+        <div id="content" style="line-height: 1.6; font-size: 18px;"></div>
+    </div>
 
     <script>
-        const API = 'https://eightvnews.onrender.com';
+        const API_URL = 'https://eightvnews.onrender.com';
         const id = new URLSearchParams(window.location.search).get('id');
 
-        async function load() {
+        async function loadArticle() {
             try {
-                let res = await fetch(`${API}/get-articles`);
-                let articles = await res.json();
-                let article = articles.find(a => a.id == id);
-                document.getElementById('title').innerText = article.title;
-                document.getElementById('content').innerText = article.content;
+                const res = await fetch(`${API_URL}/get-articles`);
+                const articles = await res.json();
+                const article = articles.find(a => a.id == id);
+
+                if (article) {
+                    document.getElementById('title').innerText = article.title;
+                    document.getElementById('content').innerText = article.content;
+                } else {
+                    document.getElementById('title').innerText = "Статья не найдена";
+                    document.getElementById('content').innerText = "Возможно, её удалили.";
+                }
             } catch (e) {
-                document.getElementById('title').innerText = "Ошибка загрузки";
+                document.getElementById('title').innerText = "Ошибка соединения";
             }
         }
-        load();
+        window.onload = loadArticle;
     </script>
 </body>
 </html>
