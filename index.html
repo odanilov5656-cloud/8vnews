@@ -2,30 +2,39 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>8vNews</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily News</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
-        .btn { display: inline-block; padding: 10px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; }
+        body { font-family: -apple-system, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: block; background: #27ae60; color: white; padding: 15px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        #status { text-align: center; color: #666; margin: 20px 0; }
     </style>
 </head>
 <body>
-    <h1>8vNews</h1>
-    <a href="editor.html" class="btn">+ Написать новость</a>
-    <div id="list">Загрузка...</div>
+    <div class="container">
+        <h1>Daily News</h1>
+        <a href="editor.html" class="btn">+ Написать новость</a>
+        <div id="status">📡 Пробуждаем сервер... (это займет 20-30 сек)</div>
+        <div id="list"></div>
+    </div>
 
     <script>
-        fetch('https://eightvnews.onrender.com/get-articles')
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('list').innerHTML = data.map(a => `
-                <div class="card">
-                    <h3>${a.title}</h3>
-                    <p>Автор: ${a.author}</p>
-                    <a href="article.html?id=${a.id}">Читать</a>
-                </div>
-            `).join('');
-        });
+        const API = 'https://eightvnews.onrender.com';
+        fetch(`${API}/get-articles`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('status').style.display = 'none';
+                document.getElementById('list').innerHTML = data.reverse().map(a => `
+                    <div class="card">
+                        <h3>${a.title}</h3>
+                        <p>Автор: ${a.author}</p>
+                        <a href="article.html?id=${a.id}">Читать статью</a>
+                    </div>
+                `).join('');
+            })
+            .catch(() => { document.getElementById('status').innerText = "Сервер спит или ошибка сети."; });
     </script>
 </body>
 </html>
