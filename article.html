@@ -3,41 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чтение статьи</title>
+    <title>Статья</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        body { font-family: -apple-system, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html">← Назад на главную</a>
+        <a href="index.html">← Назад</a>
         <h1 id="title">Загрузка...</h1>
-        <div id="content" style="line-height: 1.6; font-size: 18px;"></div>
+        <p id="content"></p>
     </div>
 
     <script>
-        const API_URL = 'https://eightvnews.onrender.com';
         const id = new URLSearchParams(window.location.search).get('id');
-
-        async function loadArticle() {
-            try {
-                const res = await fetch(`${API_URL}/get-articles`);
-                const articles = await res.json();
-                const article = articles.find(a => a.id == id);
-
+        fetch('https://eightvnews.onrender.com/get-articles')
+            .then(res => res.json())
+            .then(data => {
+                const article = data.find(a => a.id == id);
                 if (article) {
                     document.getElementById('title').innerText = article.title;
                     document.getElementById('content').innerText = article.content;
                 } else {
-                    document.getElementById('title').innerText = "Статья не найдена";
-                    document.getElementById('content').innerText = "Возможно, её удалили.";
+                    document.getElementById('title').innerText = "Не найдено";
                 }
-            } catch (e) {
-                document.getElementById('title').innerText = "Ошибка соединения";
-            }
-        }
-        window.onload = loadArticle;
+            });
     </script>
 </body>
 </html>
