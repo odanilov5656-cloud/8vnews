@@ -2,13 +2,19 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Написать новость</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новая статья</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input, textarea { width: 100%; padding: 15px; margin: 10px 0; box-sizing: border-box; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+        button { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; }
+    </style>
 </head>
 <body>
-    <h1>Новая статья</h1>
-    <input id="title" placeholder="Заголовок"><br><br>
-    <textarea id="content" placeholder="Текст"></textarea><br><br>
-    <input id="author" placeholder="Твой ник"><br><br>
+    <h1>Публикация</h1>
+    <input id="title" placeholder="Заголовок">
+    <textarea id="content" rows="10" placeholder="Текст статьи"></textarea>
+    <input id="author" placeholder="Твое имя">
     <button onclick="send()">Опубликовать</button>
 
     <script>
@@ -25,7 +31,7 @@
                 body: JSON.stringify(data)
             });
             if (res.ok) { location.href = 'index.html'; }
-            else { alert("Ошибка!"); }
+            else { alert("Ошибка сохранения"); }
         }
     </script>
 </body>
