@@ -5,47 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily News</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .news-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .status { text-align: center; color: #666; margin-top: 20px; }
+        /* Весь CSS здесь, чтобы ничего не потерялось */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
+        header { background-color: #2c3e50; color: white; padding: 1rem 0; text-align: center; }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .btn { display: inline-block; background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
+        .news-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .news-card h3 { margin-top: 0; }
+        .news-card a { color: #e67e22; text-decoration: none; font-weight: bold; }
+        .empty-msg { text-align: center; color: #7f8c8d; margin-top: 50px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Daily News</h1>
-        <div id="status" class="status">📡 Пробуждаем сервер... (подождите 30 секунд)</div>
-        <div id="news-list"></div>
-    </div>
 
-    <script>
-        const API_URL = 'https://eightvnews.onrender.com';
+<header>
+    <h1>Daily News</h1>
+</header>
 
-        async function load() {
-            try {
-                const response = await fetch(`${API_URL}/get-articles`);
-                const articles = await response.json();
-                
-                document.getElementById('status').style.display = 'none';
+<div class="container">
+    <a href="editor.html" class="btn">+ Написать статью</a>
+    <div id="status">📡 Загрузка...</div>
+    <div id="news-list"></div>
+</div>
 
-                if (articles.length === 0) {
-                    document.getElementById('news-list').innerHTML = "<h3>Пока нет новостей. Станьте первым автором!</h3>";
-                    return;
-                }
+<script>
+    const API_URL = 'https://eightvnews.onrender.com';
 
-                document.getElementById('news-list').innerHTML = articles.map(art => `
-                    <div class="news-card">
-                        <h3>${art.title}</h3>
-                        <p>Категория: ${art.category || 'Без категории'}</p>
-                        <a href="article.html?id=${art.id}">Читать далее →</a>
-                    </div>
-                `).join('');
+    async function load() {
+        const container = document.getElementById('news-list');
+        const status = document.getElementById('status');
 
-            } catch (e) {
-                document.getElementById('status').innerHTML = "Сервер спит или ошибка соединения. <button onclick='location.reload()'>Попробовать еще раз</button>";
+        try {
+            const response = await fetch(`${API_URL}/get-articles`);
+            const articles = await response.json();
+            
+            status.style.display = 'none';
+
+            if (articles.length === 0) {
+                container.innerHTML = "<div class='empty-msg'>Пока нет новостей. Станьте первым автором!</div>";
+                return;
             }
+
+            container.innerHTML = articles.map(art => `
+                <div class="news-card">
+                    <h3>${art.title}</h3>
+                    <p>Категория: ${art.category || 'Без категории'}</p>
+                    <a href="article.html?id=${art.id}">Читать статью →</a>
+                </div>
+            `).join('');
+
+        } catch (e) {
+            status.innerHTML = "Ошибка связи с сервером. Попробуйте позже.";
         }
-        window.onload = load;
-    </script>
+    }
+    window.onload = load;
+</script>
+
 </body>
 </html>
