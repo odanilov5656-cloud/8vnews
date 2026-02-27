@@ -2,65 +2,29 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чтение статьи — Daily News</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Статья</title>
 </head>
-<body style="background: #f4f4f4; font-family: sans-serif; margin: 0;">
-    <header style="background: #222; color: white; padding: 15px;">
-        <div class="container" style="max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between;">
-            <a href="index.html" style="color: white; text-decoration: none;">← На главную</a>
-            <span id="user-info"></span>
-        </div>
-    </header>
-
-    <main class="container" style="max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        <div id="article-content">
-            <h1 id="title">Загрузка заголовка...</h1>
-            <p style="color: #3498db; font-weight: bold;" id="meta"></p>
-            <hr>
-            <div id="body" style="line-height: 1.6; font-size: 18px; white-space: pre-wrap;">
-                Подождите, сервер Render просыпается...
-            </div>
-        </div>
-    </main>
+<body>
+    <a href="index.html">← Назад</a>
+    <h1 id="title">Загрузка...</h1>
+    <div id="content"></div>
 
     <script>
         const API = 'https://eightvnews.onrender.com';
-        
-        // Получаем ID статьи из ссылки (например, article.html?id=1)
-        const urlParams = new URLSearchParams(window.location.search);
-        const articleId = urlParams.get('id');
+        const id = new URLSearchParams(window.location.search).get('id');
 
-        async function loadArticle() {
-            if (!articleId) {
-                document.getElementById('body').innerText = "Статья не найдена (не указан ID).";
-                return;
-            }
-
+        async function load() {
             try {
-                // Запрашиваем конкретную статью у твоего сервера
-                const res = await fetch(`${API}/get-articles`);
-                const articles = await res.json();
-                
-                // Ищем нужную статью в списке по ID
-                const article = articles.find(a => a.id == articleId);
-
-                if (article) {
-                    document.getElementById('title').innerText = article.title;
-                    document.getElementById('meta').innerText = `Категория: ${article.category} | Автор: ${article.author}`;
-                    document.getElementById('body').innerText = article.content || "У этой статьи пока нет текста.";
-                } else {
-                    document.getElementById('body').innerText = "Извините, такая статья не существует или была удалена.";
-                }
+                let res = await fetch(`${API}/get-articles`);
+                let articles = await res.json();
+                let article = articles.find(a => a.id == id);
+                document.getElementById('title').innerText = article.title;
+                document.getElementById('content').innerText = article.content;
             } catch (e) {
-                console.error(e);
-                alert("Ошибка при связи с сервером. Попробуйте обновить страницу через 20 секунд.");
-                document.getElementById('body').innerHTML = "<b style='color:red;'>Сервер временно недоступен.</b>";
+                document.getElementById('title').innerText = "Ошибка загрузки";
             }
         }
-
-        window.onload = loadArticle;
+        load();
     </script>
 </body>
 </html>
