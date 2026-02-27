@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Статья</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; }
+        .comment { border-top: 1px solid #eee; padding: 10px 0; }
+        input, textarea { width: 100%; margin: 5px 0; padding: 10px; box-sizing: border-box; }
+        button { background: #27ae60; color: white; padding: 10px; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -14,21 +17,51 @@
         <a href="index.html">← Назад</a>
         <h1 id="title">Загрузка...</h1>
         <p id="content"></p>
+        
+        <hr>
+        <h3>Комментарии:</h3>
+        <div id="comments-list"></div>
+        <hr>
+        <input id="comm-author" placeholder="Твое имя">
+        <textarea id="comm-text" placeholder="Твой комментарий"></textarea>
+        <button onclick="postComment()">Отправить</button>
     </div>
 
     <script>
         const id = new URLSearchParams(window.location.search).get('id');
-        fetch('https://eightvnews.onrender.com/get-articles')
-            .then(res => res.json())
-            .then(data => {
-                const article = data.find(a => a.id == id);
-                if (article) {
-                    document.getElementById('title').innerText = article.title;
-                    document.getElementById('content').innerText = article.content;
-                } else {
-                    document.getElementById('title').innerText = "Статья не найдена";
-                }
+        const API = 'https://eightvnews.onrender.com';
+
+        // Загрузка статьи и комментов
+        fetch(`${API}/get-articles`).then(res => res.json()).then(data => {
+            const art = data.find(a => a.id == id);
+            document.getElementById('title').innerText = art.title;
+            document.getElementById('content').innerText = art.content;
+        });
+
+        async function loadComments() {
+            const res = await fetch(`${API}/get-comments?article_id=${id}`);
+            const comments = await res.json();
+            document.getElementById('comments-list').innerHTML = comments.map(c => 
+                `<div class="comment"><b>${c.author}</b>: ${c.text}</div>`
+            ).join('');
+        }
+
+        async function postComment() {
+            const data = {
+                article_id: id,
+                author: document.getElementById('comm-author').value,
+                text: document.getElementById('comm-text').value
+            };
+            await fetch(`${API}/add-comment`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
             });
+            document.getElementById('comm-text').value = '';
+            loadComments();
+        }
+
+        loadComments();
     </script>
 </body>
 </html>
