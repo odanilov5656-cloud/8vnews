@@ -8,15 +8,20 @@
         body { font-family: -apple-system, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; }
         .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { display: block; background: #27ae60; color: white; padding: 15px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; }
-        #status { text-align: center; color: #666; margin: 20px 0; }
+        .btn { display: block; background: #27ae60; color: white; padding: 15px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+        #status { text-align: center; margin-top: 50px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Daily News</h1>
         <a href="editor.html" class="btn">+ Написать новость</a>
-        <div id="status">📡 Пробуждаем сервер... (это займет 20-30 сек)</div>
+        
+        <div id="status">
+            <img src="loading.gif" alt="Загрузка..." style="width: 100px;">
+            <p>Сервер просыпается...</p>
+        </div>
+        
         <div id="list"></div>
     </div>
 
@@ -34,7 +39,9 @@
                     </div>
                 `).join('');
             })
-            .catch(() => { document.getElementById('status').innerText = "Сервер спит или ошибка сети."; });
+            .catch(() => { 
+                document.getElementById('status').innerHTML = "Ошибка соединения."; 
+            });
     </script>
 </body>
 </html>
