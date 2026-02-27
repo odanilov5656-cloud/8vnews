@@ -6,7 +6,7 @@
     <title>Статья</title>
     <style>
         body { font-family: -apple-system, sans-serif; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -26,7 +26,7 @@
                     document.getElementById('title').innerText = article.title;
                     document.getElementById('content').innerText = article.content;
                 } else {
-                    document.getElementById('title').innerText = "Не найдено";
+                    document.getElementById('title').innerText = "Статья не найдена";
                 }
             });
     </script>
