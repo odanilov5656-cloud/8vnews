@@ -2,64 +2,30 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily News</title>
     <style>
-        /* Весь CSS здесь, чтобы ничего не потерялось */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
-        header { background-color: #2c3e50; color: white; padding: 1rem 0; text-align: center; }
-        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
-        .btn { display: inline-block; background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
-        .news-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .news-card h3 { margin-top: 0; }
-        .news-card a { color: #e67e22; text-decoration: none; font-weight: bold; }
-        .empty-msg { text-align: center; color: #7f8c8d; margin-top: 50px; }
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+        .btn { display: inline-block; padding: 10px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; }
     </style>
 </head>
 <body>
-
-<header>
     <h1>Daily News</h1>
-</header>
+    <a href="editor.html" class="btn">+ Написать новость</a>
+    <div id="list">Загрузка...</div>
 
-<div class="container">
-    <a href="editor.html" class="btn">+ Написать статью</a>
-    <div id="status">📡 Загрузка...</div>
-    <div id="news-list"></div>
-</div>
-
-<script>
-    const API_URL = 'https://eightvnews.onrender.com';
-
-    async function load() {
-        const container = document.getElementById('news-list');
-        const status = document.getElementById('status');
-
-        try {
-            const response = await fetch(`${API_URL}/get-articles`);
-            const articles = await response.json();
-            
-            status.style.display = 'none';
-
-            if (articles.length === 0) {
-                container.innerHTML = "<div class='empty-msg'>Пока нет новостей. Станьте первым автором!</div>";
-                return;
-            }
-
-            container.innerHTML = articles.map(art => `
-                <div class="news-card">
-                    <h3>${art.title}</h3>
-                    <p>Категория: ${art.category || 'Без категории'}</p>
-                    <a href="article.html?id=${art.id}">Читать статью →</a>
+    <script>
+        fetch('https://eightvnews.onrender.com/get-articles')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('list').innerHTML = data.map(a => `
+                <div class="card">
+                    <h3>${a.title}</h3>
+                    <p>Автор: ${a.author}</p>
+                    <a href="article.html?id=${a.id}">Читать</a>
                 </div>
             `).join('');
-
-        } catch (e) {
-            status.innerHTML = "Ошибка связи с сервером. Попробуйте позже.";
-        }
-    }
-    window.onload = load;
-</script>
-
+        });
+    </script>
 </body>
 </html>
